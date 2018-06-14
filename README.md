@@ -6,12 +6,12 @@ Callback and promise based HTTP client that supports SSL pinning for React Nativ
 
 Using NPM:
 ```
-npm install react-native-pinch
+npm install cobowallet/react-native-pinch
 ```
 
 Using Yarn:
 ```
-yarn add react-native-pinch
+yarn add cobowallet/react-native-pinch
 ```
 
 ## Automatically link
