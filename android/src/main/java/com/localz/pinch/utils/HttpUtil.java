@@ -21,6 +21,7 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.util.Iterator;
 import java.util.List;
@@ -73,7 +74,7 @@ public class HttpUtil {
     }
 
     private HttpsURLConnection prepareRequest(HttpRequest request)
-            throws IOException, KeyStoreException, CertificateException, KeyManagementException, NoSuchAlgorithmException, JSONException {
+            throws IOException, KeyStoreException, CertificateException, KeyManagementException, NoSuchAlgorithmException, JSONException, NoSuchProviderException {
         HttpsURLConnection connection;
         URL url = new URL(request.endpoint);
         String method = request.method.toUpperCase();
@@ -91,7 +92,7 @@ public class HttpUtil {
         connection.setConnectTimeout(request.timeout);
         connection.setReadTimeout(request.timeout);
 
-        if (request.body != null && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE"))) {
+        if (request.body != null && (method.equals("POST") || method.equals("PUT") || method.equals("DELETE") || method.equals("PATCH"))) {
             // Set the content length of the body.
             connection.setRequestProperty("Content-length", request.body.getBytes().length + "");
             connection.setDoInput(true);
@@ -116,7 +117,7 @@ public class HttpUtil {
     }
 
     public HttpResponse sendHttpRequest(HttpRequest request)
-            throws IOException, KeyStoreException, CertificateException, KeyManagementException, NoSuchAlgorithmException, JSONException {
+            throws IOException, KeyStoreException, CertificateException, KeyManagementException, NoSuchAlgorithmException, JSONException, NoSuchProviderException {
         InputStream responseStream = null;
         HttpResponse response = new HttpResponse();
         HttpsURLConnection connection;
