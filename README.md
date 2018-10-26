@@ -111,9 +111,11 @@ Before you can make requests using SSL pinning, you first need to add your `.cer
  - Place your `.cer` files under `src/main/assets/`.
 
 ### iOS
-
- - Place your `.cer` files in your iOS Project. Don't forget to add them in your `Build Phases > Copy Bundle Resources`, in Xcode.
-
+ - Change the certification format on iOS from 'cer' to 'der'
+ - The method 'SecCertificateCreateWithData' only accepts '.der' format. If used with '.cer' a null value is returned.
+ - To transform a '.cer' to '.der', just call: 'openssl x509 -outform der -in filename.cer -out filename.der'
+ - Place your `.der` files in your iOS Project. Don't forget to add them in your `Build Phases > Copy Bundle Resources`, in Xcode.
+ - use ```sslPinning: {} // omit the `cert` key, `sslPinning` can be ommited as well```
 
 ## Example
 *Examples are using the ES6 standard*
