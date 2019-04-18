@@ -16,27 +16,37 @@
 
 @interface NSURLSessionSSLPinningDelegate:NSObject <NSURLSessionDelegate>
 
-- (id)initWithCertName:(NSString *)certName;
+- (id)initWithCertNames:(NSArray<NSString *> *)certNames;
 
-@property (nonatomic, strong) NSString *certName;
+@property (nonatomic, strong) NSArray<NSString *> *certNames;
 
 @end
 
 @implementation NSURLSessionSSLPinningDelegate
 
-- (id)initWithCertName:(NSString *)certName {
+- (id)initWithCertNames:(NSArray<NSString *> *)certNames {
     if (self = [super init]) {
-        _certName = certName;
+        _certNames = certNames;
     }
     return self;
 }
 
 - (NSArray *)pinnedCertificateData {
-    NSString *cerPath = [[NSBundle mainBundle] pathForResource:self.certName ofType:@"der"];
-    NSData *localCertData = [NSData dataWithContentsOfFile:cerPath];
+    NSMutableArray *localCertDataArray = [NSMutableArray array];
+    for (NSString* certName in self.certNames) {
+        NSString *cerPath = [[NSBundle mainBundle] pathForResource:certName ofType:@"der"];
+        if (cerPath == nil) {
+            @throw [[RNPinchException alloc]
+                    initWithName:@"CertificateError"
+                    reason:@"Can not load certicate given, check it's in the app resources."
+                    userInfo:nil];
+        }
+        NSData *localCertData = [NSData dataWithContentsOfFile:cerPath];
+        [localCertDataArray addObject:localCertData];
+    }
 
     NSMutableArray *pinnedCertificates = [NSMutableArray array];
-    for (NSData *certificateData in @[localCertData]) {
+    for (NSData *certificateData in localCertDataArray) {
         [pinnedCertificates addObject:(__bridge_transfer id)SecCertificateCreateWithData(NULL, (__bridge CFDataRef)certificateData)];
     }
     return pinnedCertificates;
@@ -89,6 +99,11 @@ RCT_EXPORT_MODULE();
     return self;
 }
 
++ (BOOL)requiresMainQueueSetup
+{
+    return YES;
+}
+
 RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTResponseSenderBlock)callback) {
     NSURL *u = [NSURL URLWithString:url];
     NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:u];
@@ -116,7 +131,10 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
         }
     }
     if (obj && obj[@"sslPinning"] && obj[@"sslPinning"][@"cert"]) {
-        NSURLSessionSSLPinningDelegate *delegate = [[NSURLSessionSSLPinningDelegate alloc] initWithCertName:obj[@"sslPinning"][@"cert"]];
+        NSURLSessionSSLPinningDelegate *delegate = [[NSURLSessionSSLPinningDelegate alloc] initWithCertNames:@[obj[@"sslPinning"][@"cert"]]];
+        session = [NSURLSession sessionWithConfiguration:self.sessionConfig delegate:delegate delegateQueue:[NSOperationQueue mainQueue]];
+    } else if (obj && obj[@"sslPinning"] && obj[@"sslPinning"][@"certs"]) {
+        NSURLSessionSSLPinningDelegate *delegate = [[NSURLSessionSSLPinningDelegate alloc] initWithCertNames:obj[@"sslPinning"][@"certs"]];
         session = [NSURLSession sessionWithConfiguration:self.sessionConfig delegate:delegate delegateQueue:[NSOperationQueue mainQueue]];
     } else {
         session = [NSURLSession sessionWithConfiguration:self.sessionConfig];
