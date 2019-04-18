@@ -14,6 +14,11 @@
   #import "RCTBridge.h"
 #endif
 
+@interface RNPinchException : NSException
+@end
+@implementation RNPinchException
+@end
+
 @interface NSURLSessionSSLPinningDelegate:NSObject <NSURLSessionDelegate>
 
 - (id)initWithCertNames:(NSArray<NSString *> *)certNames;
@@ -146,11 +151,13 @@ RCT_EXPORT_METHOD(fetch:(NSString *)url obj:(NSDictionary *)obj callback:(RCTRes
                 NSHTTPURLResponse *httpResp = (NSHTTPURLResponse*) response;
                 NSInteger statusCode = httpResp.statusCode;
                 NSString *bodyString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                NSString *statusText = [NSHTTPURLResponse localizedStringForStatusCode:httpResp.statusCode];
 
                 NSDictionary *res = @{
                                       @"status": @(statusCode),
                                       @"headers": httpResp.allHeaderFields,
-                                      @"bodyString": bodyString
+                                      @"bodyString": bodyString,
+                                      @"statusText": statusText
                                       };
                 callback(@[[NSNull null], res]);
             });
